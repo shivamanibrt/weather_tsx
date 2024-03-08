@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, ChangeEvent } from "react";
 import { CiSettings } from "react-icons/ci";
 import { RiCelsiusFill } from "react-icons/ri";
 import { TbTemperatureFahrenheit } from "react-icons/tb";
@@ -7,18 +7,46 @@ import { CiSearch } from "react-icons/ci";
 import { FaTemperatureEmpty } from "react-icons/fa6";
 import { WiHumidity } from "react-icons/wi";
 import { TiWeatherPartlySunny } from "react-icons/ti";
+import { fetchData } from "./apiHelper";
+
+interface FormState {
+    [key: string]: string;
+}
 
 const HeroSection: React.FC = () => {
     const [searchVisible, setSearchVisible] = useState<boolean>(true);
-    const [form, setForm] = useState<object>({});
+    const [form, setForm] = useState<FormState>({});
+    const [city, setCity] = useState<any | null>({});
+
+    const tempInCelcius: number = parseFloat((city?.temp - 273.15).toFixed(2));
+    // const temp: number =
+
     const inputRef = useRef<HTMLInputElement>(null);
 
     const toggleSearch = () => {
         setSearchVisible((prevState) => !prevState);
     };
 
-    const fetchHelper = (e: React.FormEvent) => {
+    const handelOnChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setForm({
+            ...form,
+            [name]: value,
+        });
+        console.log(form);
+    };
+
+    const handelOnSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        try {
+            const cityName = form.searchCity;
+            const data = await fetchData(cityName);
+            setCity(data);
+            console.log(city);
+            // setSearchVisible(true);
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     useEffect(() => {
@@ -39,10 +67,16 @@ const HeroSection: React.FC = () => {
                                     onClick={toggleSearch}
                                 />
                             ) : (
-                                <form>
+                                <form
+                                    onSubmit={handelOnSubmit}
+                                    className='flex items-center'
+                                >
                                     <input
-                                        className='bg-customWhite border-t-2 border-r-8 border-b-8 border-l-2 w-32 focus:outline-none'
+                                        className='bg-customWhite border-t-2 border-r-8 border-b-8 border-l-2 w-32 focus:outline-none '
+                                        name='searchCity'
+                                        value={form.searchCity || ""}
                                         ref={inputRef}
+                                        onChange={handelOnChange}
                                     />
                                 </form>
                             )}
@@ -56,7 +90,7 @@ const HeroSection: React.FC = () => {
                     <div className='flex gap-2 border-t-2 border-r-8 border-b-8 border-l-2 border-customBlack drop-shadow-2xl   text-customOrange'>
                         <span className='text-customOrange bg-customOrange rounded-r-xl p-1'>
                             <p className='text-white mx-1 bg-customrange rounded text-sm'>
-                                Sydney
+                                {city?.name}
                             </p>
                         </span>
                         <span className='text-customOrange bg-customOrange rounded-l-xl p-1'>
@@ -79,15 +113,17 @@ const HeroSection: React.FC = () => {
                 {/* mainview */}
                 <div className='h-[120px] border-t-2 border-r-8 border-b-8 border-l-2 border-customBlack drop-shadow-2xl p-1 mt-8 bg-customOrange flex gap-4 justify-between p-2'>
                     <div className='flex flex-col items-center text-3xl text-customWhite h-full justify-center'>
-                        <p>Sydney</p>
-                        <p className='flex mt-2'>25 &deg;</p>
+                        <p>{city?.name}</p>
+                        <p className='flex mt-2'>
+                            {city?.temp?.toFixed(2)} &deg;
+                        </p>
                     </div>
                     <div className='flex flex-col items-center h-full justify-center text-center'>
                         <span className='text-customYellow text-5xl '>
                             <TiWeatherPartlySunny />
                         </span>
                         <p className='text-[10px] w-2/3 mx-auto text-customWhite'>
-                            Lorem, adipisicing elit. Dolores, minus.
+                            {city?.description}
                         </p>
                     </div>
                 </div>
@@ -96,7 +132,7 @@ const HeroSection: React.FC = () => {
                 <div className='flex justify-between h-[80px] border-t-2 border-r-8 border-b-8 border-l-2 border-customBlack drop-shadow-2xl p-2 mt-3 bg-customPink'>
                     <span className='flex flex-col items-center'>
                         <FaTemperatureEmpty className='text-2xl text-customYellow' />
-                        <p className='text-xs text-white'>Temperature</p>
+                        <p className='text-xs text-white'>tempInCelcius</p>
                         <p className='text-xs text-white'>
                             15 &deg; - 20 &deg;
                         </p>
@@ -104,12 +140,14 @@ const HeroSection: React.FC = () => {
                     <span className='flex flex-col items-center'>
                         <FaWind className='text-2xl text-customYellow ' />
                         <p className='text-xs text-white'>Wind</p>
-                        <p className='text-xs text-white'>22 Km/h</p>
+                        <p className='text-xs text-white'>
+                            {city?.windSpeed} Km/h
+                        </p>
                     </span>
                     <span className='flex flex-col items-center'>
                         <WiHumidity className='text-2xl text-customYellow' />
                         <p className='text-xs text-white'>Humidity</p>
-                        <p className='text-xs text-white'>50%</p>
+                        <p className='text-xs text-white'>{city?.humidity}%</p>
                     </span>
                 </div>
 
