@@ -8,18 +8,23 @@ import { FaTemperatureEmpty } from "react-icons/fa6";
 import { WiHumidity } from "react-icons/wi";
 import { TiWeatherPartlySunny } from "react-icons/ti";
 import { fetchData } from "./apiHelper";
+// import profileImg from "../Icons/profile.jpg";
+const profileImg = require("../Icons/profile.jpg");
 
 interface FormState {
     [key: string]: string;
 }
 
+interface TempState {
+    value?: number;
+    unit?: string;
+}
+
 const HeroSection: React.FC = () => {
     const [searchVisible, setSearchVisible] = useState<boolean>(true);
     const [form, setForm] = useState<FormState>({});
+    const [changeTemp, setChangeTemp] = useState<TempState>({});
     const [city, setCity] = useState<any | null>({});
-
-    const tempInCelcius: number = parseFloat((city?.temp - 273.15).toFixed(2));
-    // const temp: number =
 
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -33,7 +38,7 @@ const HeroSection: React.FC = () => {
             ...form,
             [name]: value,
         });
-        console.log(form);
+        setChangeTemp(city?.temp);
     };
 
     const handelOnSubmit = async (e: React.FormEvent) => {
@@ -42,16 +47,30 @@ const HeroSection: React.FC = () => {
             const cityName = form.searchCity;
             const data = await fetchData(cityName);
             setCity(data);
-            console.log(city);
-            // setSearchVisible(true);
+            console.log(data);
+            setSearchVisible(true);
         } catch (error) {
             console.log(error);
         }
     };
 
+    const handelOnCelcius = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const tempInCelcius = parseFloat((city?.temp - 273.15).toFixed(2));
+        setChangeTemp({ value: tempInCelcius, unit: "celsius" });
+    };
+
+    const handelOnFerhenite = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const tempInFahrenheit = parseFloat(
+            (((city?.temp - 273.15) * 9) / 5 + 32).toFixed(2)
+        );
+        setChangeTemp({ value: tempInFahrenheit, unit: "fahrenheit" });
+    };
+
     useEffect(() => {
-        inputRef.current?.focus();
-    }, [searchVisible]);
+        inputRef.current?.focus() && setForm(form);
+    }, [searchVisible, form]);
 
     return (
         <div className='h-screen flex items-center justify-center'>
@@ -59,7 +78,24 @@ const HeroSection: React.FC = () => {
                 {/* Weather  */}
                 <div className=''>
                     <span className='font-sans flex items-center justify-between mt-4'>
-                        <p className='text-customOrange'>Weather</p>
+                        <div className='text-customOrange text-sm flex gap-2'>
+                            <a
+                                href='https://shivamanibrt.com/'
+                                className='underline'
+                                target='_blank'
+                                rel='noopener noreferrer'
+                            >
+                                Created by
+                            </a>
+
+                            <span>
+                                <img
+                                    src={profileImg}
+                                    alt='profile'
+                                    className='h-5 w-5 rounded-2xl'
+                                />
+                            </span>
+                        </div>
                         <span className='flex gap-2'>
                             {searchVisible ? (
                                 <CiSearch
@@ -80,7 +116,7 @@ const HeroSection: React.FC = () => {
                                     />
                                 </form>
                             )}
-                            <CiSettings className='text-2xl' />
+                            {/* <CiSettings className='text-2xl' /> */}
                         </span>
                     </span>
                 </div>
@@ -88,25 +124,38 @@ const HeroSection: React.FC = () => {
                 {/* Location */}
                 <div className='mt-5 flex justify-between items-center'>
                     <div className='flex gap-2 border-t-2 border-r-8 border-b-8 border-l-2 border-customBlack drop-shadow-2xl   text-customOrange'>
-                        <span className='text-customOrange bg-customOrange rounded-r-xl p-1'>
-                            <p className='text-white mx-1 bg-customrange rounded text-sm'>
-                                {city?.name}
-                            </p>
-                        </span>
-                        <span className='text-customOrange bg-customOrange rounded-l-xl p-1'>
-                            <p className='text-white mx-1 bg-customrange rounded text-sm'>
-                                Melbourne
-                            </p>
-                        </span>
+                        {city ? (
+                            <span className='text-customOrange bg-customOrange rounded-r-xl p-1'>
+                                <p className='text-white mx-1 bg-customrange rounded text-sm'>
+                                    {city?.name}
+                                </p>
+                            </span>
+                        ) : (
+                            <></>
+                        )}
                     </div>
 
-                    <div className='flex gap-2 border-t-2 border-r-8 border-b-8 border-l-2 border-customBlack drop-shadow-2xl p-1'>
-                        <span className='text-2xl'>
+                    <div className='flex gap-2 border-t-2 border-r-8 border-b-8 border-l-2 border-customBlack drop-shadow-2xl'>
+                        <button
+                            className={`text-2xl hover:bg-customOrange p-1 rounded-r-xl ${
+                                changeTemp?.unit === "celsius"
+                                    ? "bg-customOrange text-customWhite"
+                                    : ""
+                            }`}
+                            onClick={handelOnCelcius}
+                        >
                             <RiCelsiusFill />
-                        </span>
-                        <span className='text-2xl'>
+                        </button>
+                        <button
+                            className={`text-2xl hover:bg-customOrange p-1 rounded-l-xl ${
+                                changeTemp?.unit === "fahrenheit"
+                                    ? "bg-customOrange text-customWhite"
+                                    : ""
+                            }`}
+                            onClick={handelOnFerhenite}
+                        >
                             <TbTemperatureFahrenheit />
-                        </span>
+                        </button>
                     </div>
                 </div>
 
@@ -115,7 +164,7 @@ const HeroSection: React.FC = () => {
                     <div className='flex flex-col items-center text-3xl text-customWhite h-full justify-center'>
                         <p>{city?.name}</p>
                         <p className='flex mt-2'>
-                            {city?.temp?.toFixed(2)} &deg;
+                            {city?.temp || changeTemp?.value} &deg;
                         </p>
                     </div>
                     <div className='flex flex-col items-center h-full justify-center text-center'>
@@ -165,7 +214,7 @@ const HeroSection: React.FC = () => {
                             <TiWeatherPartlySunny />
                         </span>
                         <p className='text-sm text-white text-center'>
-                            15 &deg;
+                            {city?.temp} &deg;
                         </p>
                     </span>
                 </div>
