@@ -16,8 +16,10 @@ interface FormState {
 }
 
 interface TempState {
-    value?: number;
+    temp?: number;
     unit?: string;
+    tempMax?: number;
+    tempMin?: number;
 }
 
 const HeroSection: React.FC = () => {
@@ -56,16 +58,29 @@ const HeroSection: React.FC = () => {
 
     const handelOnCelcius = async (e: React.FormEvent) => {
         e.preventDefault();
-        const tempInCelcius = parseFloat((city?.temp - 273.15).toFixed(2));
-        setChangeTemp({ value: tempInCelcius, unit: "celsius" });
+        if (city) {
+            const tempInCelsius = parseFloat((city.temp - 273.15).toFixed(2));
+            setChangeTemp({
+                temp: tempInCelsius,
+                unit: "celsius",
+                tempMax: city.tempMax,
+                tempMin: city.tempMin,
+            });
+        }
     };
-
-    const handelOnFerhenite = async (e: React.FormEvent) => {
+    const handelOnFahrenheit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const tempInFahrenheit = parseFloat(
-            (((city?.temp - 273.15) * 9) / 5 + 32).toFixed(2)
-        );
-        setChangeTemp({ value: tempInFahrenheit, unit: "fahrenheit" });
+        if (city) {
+            const tempInFahrenheit = parseFloat(
+                (((city.temp - 273.15) * 9) / 5 + 32).toFixed(2)
+            );
+            setChangeTemp({
+                temp: tempInFahrenheit,
+                unit: "fahrenheit",
+                tempMax: city.tempMax,
+                tempMin: city.tempMin,
+            });
+        }
     };
 
     useEffect(() => {
@@ -152,7 +167,7 @@ const HeroSection: React.FC = () => {
                                     ? "bg-customOrange text-customWhite"
                                     : ""
                             }`}
-                            onClick={handelOnFerhenite}
+                            onClick={handelOnFahrenheit}
                         >
                             <TbTemperatureFahrenheit />
                         </button>
@@ -164,7 +179,8 @@ const HeroSection: React.FC = () => {
                     <div className='flex flex-col items-center text-3xl text-customWhite h-full justify-center'>
                         <p>{city?.name}</p>
                         <p className='flex mt-2'>
-                            {city?.temp || changeTemp?.value} &deg;
+                            {changeTemp?.temp ? changeTemp?.temp : city?.temp}{" "}
+                            &deg;
                         </p>
                     </div>
                     <div className='flex flex-col items-center h-full justify-center text-center'>
@@ -181,9 +197,11 @@ const HeroSection: React.FC = () => {
                 <div className='flex justify-between h-[80px] border-t-2 border-r-8 border-b-8 border-l-2 border-customBlack drop-shadow-2xl p-2 mt-3 bg-customPink'>
                     <span className='flex flex-col items-center'>
                         <FaTemperatureEmpty className='text-2xl text-customYellow' />
-                        <p className='text-xs text-white'>tempInCelcius</p>
+                        <p className='text-xs text-white'>min - max</p>
                         <p className='text-xs text-white'>
-                            15 &deg; - 20 &deg;
+                            {changeTemp?.temp
+                                ? `${changeTemp?.tempMin}° - ${changeTemp?.tempMax}°`
+                                : `${city?.tempMin}° - ${city?.tempMax}°`}
                         </p>
                     </span>
                     <span className='flex flex-col items-center'>
@@ -201,9 +219,11 @@ const HeroSection: React.FC = () => {
                 </div>
 
                 {/* today,tommorow */}
-                <div className='flex  gap-2 h-[40px] border-t-2 border-r-8 border-b-8 border-l-2 border-customBlack drop-shadow-2xl p-1 mt-3'>
+                <div className='flex items-center gap-2 h-[40px] border-t-2 border-r-8 border-b-8 border-l-2 border-customBlack drop-shadow-2xl p-1 mt-3'>
                     <p className=''>Today</p>
-                    <p className=''>Tomorrow</p>
+                    <p className='text-[10px]'>
+                        This feature is only available to full API user.
+                    </p>
                 </div>
 
                 {/* temperature  */}
@@ -214,7 +234,19 @@ const HeroSection: React.FC = () => {
                             <TiWeatherPartlySunny />
                         </span>
                         <p className='text-sm text-white text-center'>
-                            {city?.temp} &deg;
+                            {changeTemp?.temp ? changeTemp?.temp : city?.temp}{" "}
+                            &deg;
+                        </p>
+                    </span>
+                    <span className='flex items-center flex-col items-center justify-center h-full text-center'>
+                        <p className='text-sm text-white'>
+                            1 hour later or any other interval
+                        </p>
+                        <span className='text-customYellow text-xl '>
+                            <TiWeatherPartlySunny />
+                        </span>
+                        <p className='text-[10px] text-white'>
+                            This feature is only available to full API user.
                         </p>
                     </span>
                 </div>
